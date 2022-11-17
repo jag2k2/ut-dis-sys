@@ -9,11 +9,13 @@ public class Node implements Runnable {
 
     @Override
     public void run() {
-        try {
-            String name = handle.take();
-            System.out.println("Hello " + name);
-        } catch (InterruptedException err) {
-            System.out.println(err.toString());
+        for (int i = 0; i < 1; i++){
+            try {
+                String name = handle.take();
+                System.out.println("Hello " + name);
+            } catch (InterruptedException err) {
+                System.out.println(err.toString());
+            }
         }
     }
 }
