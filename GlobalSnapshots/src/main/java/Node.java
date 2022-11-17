@@ -1,12 +1,19 @@
+import java.util.concurrent.BlockingQueue;
+
 public class Node implements Runnable {
-    private final String name;
+    private final BlockingQueue<String> handle;
     
-    public Node(String name){
-        this.name = name;
+    public Node(BlockingQueue<String> handle){
+        this.handle = handle;
     }
 
     @Override
     public void run() {
-        System.out.println("Hello " + name);
+        try {
+            String name = handle.take();
+            System.out.println("Hello " + name);
+        } catch (InterruptedException err) {
+            System.out.println(err.toString());
+        }
     }
 }
