@@ -10,10 +10,10 @@ public class Main {
         BlockingQueue<Integer> handleNode3 = new LinkedBlockingQueue<>();
         BlockingQueue<Integer> handleNode4 = new LinkedBlockingQueue<>();
 
-        Thread nodeThread1 = new Thread(new Node(0, handleNode1));
-        Thread nodeThread2 = new Thread(new Node(1, handleNode2));
-        Thread nodeThread3 = new Thread(new Node(2, handleNode3));
-        Thread nodeThread4 = new Thread(new Node(3, handleNode4));
+        Thread nodeThread1 = new Thread(new Node(0, handleNode1, handleNode2));
+        Thread nodeThread2 = new Thread(new Node(1, handleNode2, handleNode3));
+        Thread nodeThread3 = new Thread(new Node(2, handleNode3, handleNode4));
+        Thread nodeThread4 = new Thread(new Node(3, handleNode4, handleNode1));
 
         nodeThread1.start();
         nodeThread2.start();
@@ -22,9 +22,6 @@ public class Main {
 
         try {
             handleNode1.put(0);
-            handleNode2.put(5);
-            handleNode3.put(10);
-            handleNode4.put(15);
         } catch (InterruptedException err){
             System.out.println(err.toString());
         }
