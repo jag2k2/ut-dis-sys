@@ -1,14 +1,14 @@
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class Main {
     public static void main(String[] args) {
         System.out.println("Hello World!");
 
-        BlockingQueue<String> handleNode1 = new ArrayBlockingQueue<>(100);
-        BlockingQueue<String> handleNode2 = new ArrayBlockingQueue<>(100);
-        BlockingQueue<String> handleNode3 = new ArrayBlockingQueue<>(100);
-        BlockingQueue<String> handleNode4 = new ArrayBlockingQueue<>(100);
+        BlockingQueue<String> handleNode1 = new LinkedBlockingQueue<>();
+        BlockingQueue<String> handleNode2 = new LinkedBlockingQueue<>();
+        BlockingQueue<String> handleNode3 = new LinkedBlockingQueue<>();
+        BlockingQueue<String> handleNode4 = new LinkedBlockingQueue<>();
 
         Thread nodeThread1 = new Thread(new Node(handleNode1));
         Thread nodeThread2 = new Thread(new Node(handleNode2));
