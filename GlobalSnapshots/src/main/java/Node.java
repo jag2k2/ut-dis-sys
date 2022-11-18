@@ -1,4 +1,5 @@
 import java.util.concurrent.BlockingQueue;
+import java.io.FileWriter;
 
 public class Node implements Runnable {
     private final int id;
@@ -13,15 +14,19 @@ public class Node implements Runnable {
 
     @Override
     public void run() {
-        for (int i = 0; i < 4; i++){
-            try {
-                int receivedValue = handle.take();
-                int modifiedValue = receivedValue + 1;
-                System.out.println("Proces " + String.valueOf(id) + ": " + String.valueOf(modifiedValue));
-                outgoingChannel.put(modifiedValue);
-            } catch (InterruptedException err) {
-                System.out.println(err.toString());
+        try {
+            String filename = "debug_out" + String.valueOf(id) + ".txt";
+            FileWriter fileWriter = new FileWriter(filename);
+            for (int i = 0; i < 4; i++){
+                    int receivedValue = handle.take();
+                    int modifiedValue = receivedValue + 1;
+                    fileWriter.write("Process " + String.valueOf(id) + ": " + String.valueOf(modifiedValue) + "\n");
+                    outgoingChannel.put(modifiedValue);
+                    Thread.sleep(10);
             }
+            fileWriter.close();
+        } catch (Exception err) {
+            System.out.println(err.toString());
         }
     }
 }
