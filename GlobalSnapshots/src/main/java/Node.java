@@ -20,17 +20,17 @@ public class Node implements Runnable {
             while (true) {
                     Message receivedMsg = handle.take();
                     String command = receivedMsg.command;
-                    if (command == "Exit"){
+                    if (command == "Exit") {
                         outgoingChannel.put(new Message("Exit", 0));
                         break;
                     }
                     else if (command == "AppMsg") {
                         int modifiedValue = receivedMsg.payload + 1;
+                        Thread.sleep(100);
                         fileWriter.write("Process " + String.valueOf(id) + ": " + String.valueOf(modifiedValue) + "\n");
                         fileWriter.flush();
                         Message responseMessage = new Message("AppMsg", modifiedValue);
                         outgoingChannel.put(responseMessage);
-                        Thread.sleep(100);
                     }
             } 
             fileWriter.close();
