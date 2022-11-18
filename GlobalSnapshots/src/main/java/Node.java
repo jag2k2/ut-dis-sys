@@ -3,10 +3,10 @@ import java.io.FileWriter;
 
 public class Node implements Runnable {
     private final int id;
-    private final BlockingQueue<Integer> handle;
-    private final BlockingQueue<Integer> outgoingChannel;
+    private final BlockingQueue<Message> handle;
+    private final BlockingQueue<Message> outgoingChannel;
     
-    public Node(int id, BlockingQueue<Integer> handle, BlockingQueue<Integer> outgoingChannel){
+    public Node(int id, BlockingQueue<Message> handle, BlockingQueue<Message> outgoingChannel){
         this.id = id;
         this.handle = handle;
         this.outgoingChannel = outgoingChannel;
@@ -17,13 +17,22 @@ public class Node implements Runnable {
         try {
             String filename = "debug_out" + String.valueOf(id) + ".txt";
             FileWriter fileWriter = new FileWriter(filename);
-            for (int i = 0; i < 4; i++){
-                    int receivedValue = handle.take();
-                    int modifiedValue = receivedValue + 1;
-                    fileWriter.write("Process " + String.valueOf(id) + ": " + String.valueOf(modifiedValue) + "\n");
-                    outgoingChannel.put(modifiedValue);
-                    Thread.sleep(10);
-            }
+            while (true) {
+                    Message receivedMsg = handle.take();
+                    String command = receivedMsg.command;
+                    if (command == "Exit"){
+                        outgoingChannel.put(new Message("Exit", 0));
+                        break;
+                    }
+                    else if (command == "AppMsg") {
+                        int modifiedValue = receivedMsg.payload + 1;
+                        fileWriter.write("Process " + String.valueOf(id) + ": " + String.valueOf(modifiedValue) + "\n");
+                        fileWriter.flush();
+                        Message responseMessage = new Message("AppMsg", modifiedValue);
+                        outgoingChannel.put(responseMessage);
+                        Thread.sleep(100);
+                    }
+            } 
             fileWriter.close();
         } catch (Exception err) {
             System.out.println(err.toString());

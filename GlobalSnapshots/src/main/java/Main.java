@@ -5,10 +5,10 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Hello World!");
 
-        BlockingQueue<Integer> handleNode1 = new LinkedBlockingQueue<>();
-        BlockingQueue<Integer> handleNode2 = new LinkedBlockingQueue<>();
-        BlockingQueue<Integer> handleNode3 = new LinkedBlockingQueue<>();
-        BlockingQueue<Integer> handleNode4 = new LinkedBlockingQueue<>();
+        BlockingQueue<Message> handleNode1 = new LinkedBlockingQueue<>();
+        BlockingQueue<Message> handleNode2 = new LinkedBlockingQueue<>();
+        BlockingQueue<Message> handleNode3 = new LinkedBlockingQueue<>();
+        BlockingQueue<Message> handleNode4 = new LinkedBlockingQueue<>();
 
         Thread nodeThread1 = new Thread(new Node(0, handleNode1, handleNode2));
         Thread nodeThread2 = new Thread(new Node(1, handleNode2, handleNode3));
@@ -21,7 +21,9 @@ public class Main {
         nodeThread4.start();
 
         try {
-            handleNode1.put(0);
+            handleNode1.put(new Message("AppMsg", 0));
+            Thread.sleep(1000);
+            handleNode1.put(new Message("Exit", 0));
         } catch (InterruptedException err){
             System.out.println(err.toString());
         }
