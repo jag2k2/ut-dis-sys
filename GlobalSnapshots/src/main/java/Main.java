@@ -12,10 +12,10 @@ public class Main {
         BlockingQueue<Message> handleNode3 = new LinkedBlockingQueue<>();
         BlockingQueue<Message> handleNode4 = new LinkedBlockingQueue<>();
 
-        Thread nodeThread1 = new Thread(new Node(0, handleNode1, handleNode2));
-        Thread nodeThread2 = new Thread(new Node(1, handleNode2, handleNode3));
-        Thread nodeThread3 = new Thread(new Node(2, handleNode3, handleNode4));
-        Thread nodeThread4 = new Thread(new Node(3, handleNode4, handleNode1));
+        Thread nodeThread1 = new Thread(new Node(1, handleNode1, handleNode2));
+        Thread nodeThread2 = new Thread(new Node(2, handleNode2, handleNode3));
+        Thread nodeThread3 = new Thread(new Node(3, handleNode3, handleNode4));
+        Thread nodeThread4 = new Thread(new Node(4, handleNode4, handleNode1));
 
         nodeThread1.start();
         nodeThread2.start();
@@ -29,30 +29,28 @@ public class Main {
             handleNode1.put(new Message("AppMsg", 0));
             while (true) {
                 try {
-                        int cmd = inputReader.nextInt();
-                        if (cmd == 0) {
-                            handleNode1.put(new Message("Exit", 0));
-                            break;
-                        }
-                        else {
-                            System.out.println("Entered: " + Integer.valueOf(cmd));
-                        }
+                    int cmd = inputReader.nextInt();
+                    if (cmd == 0) {
+                        handleNode1.put(new Message("Exit", 0));
+                        break;
+                    }
+                    else {
+                        System.out.println("User Input: " + Integer.valueOf(cmd));
+                    }
                 } catch (InputMismatchException err) {
                     System.out.println(err.toString());
                 }
             }
-        } catch (InterruptedException err){
-            System.out.println(err.toString());
-        }
 
-        try {
             nodeThread1.join();
             nodeThread2.join();
             nodeThread3.join();
             nodeThread4.join();
-        } catch(InterruptedException err){
+
+        } catch (InterruptedException err){
             System.out.println(err.toString());
         }
+
         inputReader.close();
         System.out.println("Exiting");
     }
