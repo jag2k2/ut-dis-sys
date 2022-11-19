@@ -10,7 +10,7 @@ public class Node implements Runnable {
     private final BlockingQueue<Message> handle;
     private final int[] incomingChannelIDs;
     private final List<BlockingQueue<Message>> outgoingChannels;
-    private boolean color = 0;
+    private boolean color = false;
     private final Map<Integer, List<Message>> chan = new HashMap<>();
     private final Map<Integer, Boolean> closed = new HashMap<>();
 

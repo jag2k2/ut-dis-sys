@@ -24,6 +24,12 @@ The following commands may be issued by the client
 - `javac .\*java`
 - `java Client localhost <tcp-port> <udp-port>`
 - `java Server <tcp-port> <udp-port> .\input\inventory.txt`
+### To Run the Project useful commands as implemented
+- 0 + [enter] : Exit
+
+#### Commands to be implemented
+- Snapshot -- to be implemented in Node.java
+- Restore -- to be implemented in Node.java
 
 ## Contributors
 - [Blake De Garza](https://github.com/BDD16) bd6225
