@@ -2,6 +2,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
@@ -12,10 +14,20 @@ public class Main {
         BlockingQueue<Message> handleNode3 = new LinkedBlockingQueue<>();
         BlockingQueue<Message> handleNode4 = new LinkedBlockingQueue<>();
 
-        Thread nodeThread1 = new Thread(new Node(1, handleNode1, handleNode2));
-        Thread nodeThread2 = new Thread(new Node(2, handleNode2, handleNode3));
-        Thread nodeThread3 = new Thread(new Node(3, handleNode3, handleNode4));
-        Thread nodeThread4 = new Thread(new Node(4, handleNode4, handleNode1));
+        List<BlockingQueue<Message>> outgoingChannels1 = new ArrayList<BlockingQueue<Message>>();
+        List<BlockingQueue<Message>> outgoingChannels2 = new ArrayList<BlockingQueue<Message>>();
+        List<BlockingQueue<Message>> outgoingChannels3 = new ArrayList<BlockingQueue<Message>>();
+        List<BlockingQueue<Message>> outgoingChannels4 = new ArrayList<BlockingQueue<Message>>();
+
+        outgoingChannels1.add(handleNode2);
+        outgoingChannels2.add(handleNode3);
+        outgoingChannels3.add(handleNode4);
+        outgoingChannels4.add(handleNode1);
+
+        Thread nodeThread1 = new Thread(new Node(1, handleNode1, outgoingChannels1));
+        Thread nodeThread2 = new Thread(new Node(2, handleNode2, outgoingChannels2));
+        Thread nodeThread3 = new Thread(new Node(3, handleNode3, outgoingChannels3));
+        Thread nodeThread4 = new Thread(new Node(4, handleNode4, outgoingChannels4));
 
         nodeThread1.start();
         nodeThread2.start();
