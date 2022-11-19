@@ -6,10 +6,13 @@ public class Node implements Runnable {
     private final BlockingQueue<Message> handle;
     private final BlockingQueue<Message> outgoingChannel;
     
+    private int state;
+    
     public Node(int id, BlockingQueue<Message> handle, BlockingQueue<Message> outgoingChannel){
         this.id = id;
         this.handle = handle;
         this.outgoingChannel = outgoingChannel;
+        this.state = 0;
     }
 
     @Override
@@ -20,17 +23,23 @@ public class Node implements Runnable {
             while (true) {
                     Message receivedMsg = handle.take();
                     String command = receivedMsg.command;
-                    if (command == "Exit") {
-                        outgoingChannel.put(new Message("Exit", 0));
-                        break;
-                    }
-                    else if (command == "AppMsg") {
-                        int modifiedValue = receivedMsg.payload + 1;
+                    if (command == "AppMsg") {
+                        state = receivedMsg.payload + 1;
                         Thread.sleep(100);
-                        fileWriter.write("Process " + String.valueOf(id) + ": " + String.valueOf(modifiedValue) + "\n");
+                        fileWriter.write("Process " + String.valueOf(id) + ": AppMsg from " + String.valueOf(receivedMsg.id) + ", " + String.valueOf(state) + "\n");
                         fileWriter.flush();
-                        Message responseMessage = new Message("AppMsg", modifiedValue);
+                        Message responseMessage = new Message(id, "AppMsg", state);
                         outgoingChannel.put(responseMessage);
+                    } 
+                    else if (command == "Snapshot") {
+
+                    }
+                    else if (command == "Restore") {
+
+                    } 
+                    else if (command == "Exit") {
+                        outgoingChannel.put(new Message(id, "Exit", 0));
+                        break;
                     }
             } 
             fileWriter.close();

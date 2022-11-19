@@ -26,12 +26,12 @@ public class Main {
         System.out.println("Enter a Command (0:Exit/1:Snapshot/2:Restore)");
 
         try {
-            handleNode1.put(new Message("AppMsg", 0));
+            handleNode1.put(new Message(0, "AppMsg", 0));
             while (true) {
                 try {
                     int cmd = inputReader.nextInt();
                     if (cmd == 0) {
-                        handleNode1.put(new Message("Exit", 0));
+                        handleNode1.put(new Message(0, "Exit", 0));
                         break;
                     }
                     else {
