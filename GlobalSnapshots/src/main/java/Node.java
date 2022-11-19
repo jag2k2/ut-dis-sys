@@ -1,13 +1,19 @@
 import java.util.concurrent.BlockingQueue;
 import java.io.FileWriter;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Node implements Runnable {
     private final int id;
     private final BlockingQueue<Message> handle;
     private final int[] incomingChannelIDs;
     private final List<BlockingQueue<Message>> outgoingChannels;
-    
+    private boolean color = 0;
+    private final Map<Integer, List<Message>> chan = new HashMap<>();
+    private final Map<Integer, Boolean> closed = new HashMap<>();
+
     private int state;
     
     public Node(int id, BlockingQueue<Message> handle, int[] incomingChannelIDs, List<BlockingQueue<Message>> outgoingChannels){
@@ -16,6 +22,10 @@ public class Node implements Runnable {
         this.incomingChannelIDs = incomingChannelIDs;
         this.outgoingChannels = outgoingChannels;
         this.state = 0;
+        for (int chanId : incomingChannelIDs) {
+            closed.put(chanId, false);
+            chan.put(chanId, new ArrayList<>());
+        }
     }
 
     @Override
