@@ -5,15 +5,15 @@ import java.util.List;
 public class Node implements Runnable {
     private final int id;
     private final BlockingQueue<Message> handle;
-    private final int[] incomingChannels;
+    private final int[] incomingChannelIDs;
     private final List<BlockingQueue<Message>> outgoingChannels;
     
     private int state;
     
-    public Node(int id, BlockingQueue<Message> handle, int[] incomingChannels, List<BlockingQueue<Message>> outgoingChannels){
+    public Node(int id, BlockingQueue<Message> handle, int[] incomingChannelIDs, List<BlockingQueue<Message>> outgoingChannels){
         this.id = id;
         this.handle = handle;
-        this.incomingChannels = incomingChannels;
+        this.incomingChannelIDs = incomingChannelIDs;
         this.outgoingChannels = outgoingChannels;
         this.state = 0;
     }

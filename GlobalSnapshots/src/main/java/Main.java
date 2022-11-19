@@ -24,15 +24,15 @@ public class Main {
         outgoingChannels3.add(handleNode4);
         outgoingChannels4.add(handleNode1);
 
-        int[] incomingChannels1 = {4};
-        int[] incomingChannels2 = {1};
-        int[] incomingChannels3 = {2};
-        int[] incomingChannels4 = {3};
+        int[] incomingChannelIDs1 = {4};
+        int[] incomingChannelIDs2 = {1};
+        int[] incomingChannelIDs3 = {2};
+        int[] incomingChannelIDs4 = {3};
 
-        Thread nodeThread1 = new Thread(new Node(1, handleNode1, incomingChannels1, outgoingChannels1));
-        Thread nodeThread2 = new Thread(new Node(2, handleNode2, incomingChannels2, outgoingChannels2));
-        Thread nodeThread3 = new Thread(new Node(3, handleNode3, incomingChannels3, outgoingChannels3));
-        Thread nodeThread4 = new Thread(new Node(4, handleNode4, incomingChannels4, outgoingChannels4));
+        Thread nodeThread1 = new Thread(new Node(1, handleNode1, incomingChannelIDs1, outgoingChannels1));
+        Thread nodeThread2 = new Thread(new Node(2, handleNode2, incomingChannelIDs2, outgoingChannels2));
+        Thread nodeThread3 = new Thread(new Node(3, handleNode3, incomingChannelIDs3, outgoingChannels3));
+        Thread nodeThread4 = new Thread(new Node(4, handleNode4, incomingChannelIDs4, outgoingChannels4));
 
         nodeThread1.start();
         nodeThread2.start();
