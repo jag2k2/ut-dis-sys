@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.InputMismatchException;
@@ -6,7 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         System.out.println("Hello World!");
 
         BlockingQueue<Message> handleNode1 = new LinkedBlockingQueue<>();
@@ -43,13 +44,17 @@ public class Main {
         System.out.println("Enter a Command (0:Exit/1:Snapshot/2:Restore)");
 
         try {
-            handleNode1.put(new Message(0, "AppMsg", 0));
+            handleNode1.put(new Message(0, "AppMsg", 0, null));
+            MarkerCustom snapshotMarker = MarkerCustom.RED;
             while (true) {
                 try {
                     int cmd = inputReader.nextInt();
                     if (cmd == 0) {
-                        handleNode1.put(new Message(0, "Exit", 0));
+                        handleNode1.put(new Message(0, "Exit", 0, null));
                         break;
+                    }
+                    else if (cmd == 1){
+                        handleNode1.put(new Message(0, "Snapshot", 0, snapshotMarker));
                     }
                     else {
                         System.out.println("User Input: " + Integer.valueOf(cmd));
