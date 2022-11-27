@@ -1,10 +1,6 @@
-import java.io.IOException;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
-import java.io.FileWriter;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 
 public class Node implements Runnable, SnapShotAPI {
     private final int id;
@@ -64,6 +60,8 @@ public class Node implements Runnable, SnapShotAPI {
                         localSnapShot();
                     }
                     else if (command == "Restore") {
+                        System.out.println("About to Restore");
+                        restoreState();
 
                     } 
                     else if (command == "Exit") {
@@ -72,7 +70,7 @@ public class Node implements Runnable, SnapShotAPI {
                         break;
                     }
             } 
-            fileWriter.close();
+            //fileWriter.close();
         } catch (Exception err) {
             System.out.println(err.toString());
         }
@@ -119,7 +117,10 @@ public class Node implements Runnable, SnapShotAPI {
 
     @Override
     public void saveState() throws IOException {
+        this.fileWriter = new FileWriter(filename);
         this.fileWriter.write(String.valueOf(this.state));
+        this.fileWriter.close();
+        System.out.println("SnapShot of Node: " + this.id + ", State: " + this.state);
     }
 
     public int getState(){
@@ -128,6 +129,23 @@ public class Node implements Runnable, SnapShotAPI {
 
     public void localSnapShot() throws IOException, InterruptedException {
         turnRed();
+    }
+
+    public void restoreState() throws InterruptedException, FileNotFoundException {
+        Scanner fileToRead = new Scanner(new File(filename));
+        if(myMarkerColor == MarkerCustom.RED) {
+            state = fileToRead.nextInt();
+            myMarkerColor = MarkerCustom.WHITE;
+            Message markerMessage = new Message(this.id, "Restore",0, null);
+            outgoingChannels.get(0).put(markerMessage);
+            System.out.println("Restored to State, Node: " + this.id + " State: " + this.state);
+        }
+        else{
+            if(fileToRead.hasNextInt()){
+                state = fileToRead.nextInt();
+                myMarkerColor = MarkerCustom.WHITE; // just make sure the marker color is set to White.
+            }
+        }
     }
 
 }

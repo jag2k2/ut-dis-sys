@@ -56,6 +56,9 @@ public class Main {
                     else if (cmd == 1){
                         handleNode1.put(new Message(0, "Snapshot", 0, snapshotMarker));
                     }
+                    else if (cmd == 2){
+                        handleNode1.put(new Message(0, "Restore", 0, null));
+                    }
                     else {
                         System.out.println("User Input: " + Integer.valueOf(cmd));
                     }
