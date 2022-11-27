@@ -8,7 +8,7 @@ public class Node implements Runnable, SnapShotAPI {
     private final int[] incomingChannelIDs;
     private final List<BlockingQueue<Message>> outgoingChannels;
     private boolean color = false;
-    private final Map<Integer, List<Message>> chan = new HashMap<>();
+    private Map<Integer, List<Message>> chan = new HashMap<>();
     private final Map<Integer, Boolean> closed = new HashMap<>();
     MarkerCustom myMarkerColor;
 
@@ -117,9 +117,20 @@ public class Node implements Runnable, SnapShotAPI {
 
     @Override
     public void saveState() throws IOException {
+
+
+
+        //first save the state of the node
         this.fileWriter = new FileWriter(filename);
         this.fileWriter.write(String.valueOf(this.state));
         this.fileWriter.close();
+        //During this IO operation there could have been messages queued so save the chan object
+        //which are the incoming messages during that time.
+
+        FileOutputStream fout = new FileOutputStream("Node_" + this.id + "_messageList.txt");
+        ObjectOutputStream objStream = new ObjectOutputStream(fout);
+        objStream.writeObject(this.chan);
+        fout.close();
         System.out.println("SnapShot of Node: " + this.id + ", State: " + this.state);
     }
 
@@ -131,14 +142,38 @@ public class Node implements Runnable, SnapShotAPI {
         turnRed();
     }
 
-    public void restoreState() throws InterruptedException, FileNotFoundException {
+    public void restoreState() throws InterruptedException, IOException {
         Scanner fileToRead = new Scanner(new File(filename));
         if(myMarkerColor == MarkerCustom.RED) {
             state = fileToRead.nextInt();
+            // READ during time of snapshot the restoration of the channel
+            ObjectInputStream objectinputstream = null;
+            try {
+                FileInputStream streamIn = new FileInputStream("Node_" + this.id + "_messageList.txt");
+                objectinputstream = new ObjectInputStream(streamIn);
+                Map<Integer, List<Message>> chanObjectStreamedIn = (Map<Integer, List<Message>>) objectinputstream.readObject();
+                System.out.println(chanObjectStreamedIn);
+                this.chan = chanObjectStreamedIn;
+                System.out.println("updated the channel successfully of previous messages");
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if(objectinputstream != null){
+                    objectinputstream.close();
+                }
+            }
+
+
             myMarkerColor = MarkerCustom.WHITE;
             Message markerMessage = new Message(this.id, "Restore",0, null);
+
+
             outgoingChannels.get(0).put(markerMessage);
             System.out.println("Restored to State, Node: " + this.id + " State: " + this.state);
+
+            //now restore the incoming messages that occured previously
         }
         else{
             if(fileToRead.hasNextInt()){
