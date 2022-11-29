@@ -166,6 +166,15 @@ public class Node implements Runnable, SnapShotAPI {
                 this.chan = chanObjectStreamedIn;
                 System.out.println("updated the channel successfully of previous messages");
 
+                this.handle.clear();
+
+                for( Map.Entry<Integer, List<Message>> oldMesgList : chan.entrySet()){
+                    for(Message msg: oldMesgList.getValue() ){
+                        handle.put(msg); // Loses Fifo change to List of Messages
+                        // loses any Happens-Before relationship that might exist between these messages
+                    }
+                }
+
 
             } catch (Exception e) {
                 e.printStackTrace();
