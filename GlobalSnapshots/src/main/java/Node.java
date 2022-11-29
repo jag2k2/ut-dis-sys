@@ -83,6 +83,15 @@ public class Node implements Runnable, SnapShotAPI {
                turnRed();
            }
            closed.put(jth, true);
+           boolean allClosed = !chan.containsValue(false);
+           if(allClosed){
+               FileOutputStream fout = new FileOutputStream("Node_" + this.id + "_messageList.txt");
+               ObjectOutputStream objStream = new ObjectOutputStream(fout);
+               objStream.writeObject(this.chan);
+               fout.close();
+               System.out.println("SnapShot of Node: " + this.id + ", State: " + this.state);
+
+           }
        }
     }
 
@@ -90,6 +99,7 @@ public class Node implements Runnable, SnapShotAPI {
     public void receive(Message program_message) {
             if ((myMarkerColor == MarkerCustom.RED) && (!closed.get(program_message.id))) {
                 chan.get(program_message.id).add(program_message);
+
             }
     }
 
@@ -127,11 +137,11 @@ public class Node implements Runnable, SnapShotAPI {
         //During this IO operation there could have been messages queued so save the chan object
         //which are the incoming messages during that time.
 
-        FileOutputStream fout = new FileOutputStream("Node_" + this.id + "_messageList.txt");
-        ObjectOutputStream objStream = new ObjectOutputStream(fout);
-        objStream.writeObject(this.chan);
-        fout.close();
-        System.out.println("SnapShot of Node: " + this.id + ", State: " + this.state);
+//        FileOutputStream fout = new FileOutputStream("Node_" + this.id + "_messageList.txt");
+//        ObjectOutputStream objStream = new ObjectOutputStream(fout);
+//        objStream.writeObject(this.chan);
+//        fout.close();
+//        System.out.println("SnapShot of Node: " + this.id + ", State: " + this.state);
     }
 
     public int getState(){
