@@ -24,7 +24,7 @@ public class Main {
         outgoingChannels3.add(handleNode4);
         outgoingChannels4.add(handleNode1);
 
-        int[] incomingChannelIDs1 = {4};
+        int[] incomingChannelIDs1 = {0,4};
         int[] incomingChannelIDs2 = {1};
         int[] incomingChannelIDs3 = {2};
         int[] incomingChannelIDs4 = {3};
