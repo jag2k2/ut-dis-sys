@@ -24,6 +24,15 @@ public class EventLogger {
         }
     }
 
+    public void logString(String note) {
+        try {
+            fileWriter.write("Pid" + String.valueOf(this.processId) + ": " + note + "\n");
+            fileWriter.flush();
+        } catch (IOException err) {
+            System.out.println("EventLogger: " + err.toString());
+        }
+    }
+
     public void close() {
         try {
             fileWriter.close();

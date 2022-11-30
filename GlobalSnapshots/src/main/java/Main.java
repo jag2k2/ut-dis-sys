@@ -53,10 +53,10 @@ public class Main {
                         exit = true;
                     }
                     else if (cmd == 1) {
-                        handleNode1.put(new Message(0, "Marker"));
+                        handleNode1.put(new Message(0, "MARKER"));
                     }
                     else if (cmd == 2) {
-                        handleNode1.put(new Message(0, "Restore"));
+                        handleNode1.put(new Message(0, "RESTORE"));
                     }
                     else {
                         System.out.println("Invalid input: " + Integer.valueOf(cmd));

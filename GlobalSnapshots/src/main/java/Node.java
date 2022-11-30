@@ -13,7 +13,7 @@ public class Node implements Runnable {
     private Color restoreColor;
     private final Map<Integer, List<Message>> chan = new HashMap<>();
     private final Map<Integer, Boolean> closed = new HashMap<>();
-
+    
     private int state;
     private int savedState;
 
@@ -43,41 +43,38 @@ public class Node implements Runnable {
             }
             String command = receivedMsg.command;
             int chanId = receivedMsg.id;
+            Message forwardMessage = new Message(this.id, command);
             if (command == "ProgMsg") {
-                try {
-                    Thread.sleep(250);
-                } catch (InterruptedException err) {
-                    System.out.println("Node" + String.valueOf(this.id) + " sleep");
-                }
+                insertProcessingTime(250);
                 this.state += this.id;                     
-                sendMsgToNeighbors(new Message(id, command));
+                sendMsgToNeighbors(forwardMessage);
                 if (snapColor == Color.RED && closed.get(chanId) == false) {
                     chan.get(chanId).add(receivedMsg);
                 }
             } 
-            else if (command == "Marker") {
+            else if (command == "MARKER") {
                 if (snapColor == Color.WHITE) {                             // turn red
                     savedState = state;
                     snapColor = Color.RED;     
-                    sendMsgToNeighbors(new Message(id, "Marker"));          // forward Marker but with new id and state
+                    sendMsgToNeighbors(forwardMessage);          // forward Marker but with new id and state
                 }
                 closed.put(chanId, true);
             }
-            else if (command == "Restore") {
+            else if (command == "RESTORE") {
                 if (restoreColor == Color.BLUE) {                           // turn green
-                    state = savedState;
+                        state = savedState;
                     restoreColor = Color.GREEN;    
-                    sendMsgToNeighbors(new Message(id, "Restore"));         // forward Restore but with new id and state
-                }
-                closed.put(chanId, false);
-                boolean allOpen = !chan.containsValue(true);
-                if (allOpen == true) {
-                    restoreTransitMessages();
-                    initializeChan();
+                    sendMsgToNeighbors(forwardMessage);         // forward Restore but with new id and state
+                    }
+                    closed.put(chanId, false);
+                    boolean allOpen = !closed.containsValue(true);
+                    if (allOpen == true) {
+                        restoreTransitMessages();
+                        initializeChan();
                 }
             } 
             else if (command == "Exit") {
-                sendMsgToNeighbors(new Message(id, command));
+                sendMsgToNeighbors(forwardMessage);
                 exit = true;
             }
             eventLogger.logMessage(receivedMsg, state);
@@ -117,5 +114,13 @@ public class Node implements Runnable {
                 }
             }
         }
+    }
+
+    public void insertProcessingTime(int milliseconds) {
+                try {
+                    Thread.sleep(milliseconds);
+                } catch (InterruptedException err) {
+                    System.out.println("Node" + String.valueOf(this.id) + " sleep");
+                }
     }
 }
