@@ -1,18 +1,14 @@
 import java.util.concurrent.BlockingQueue;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 
 public class Node implements Runnable {
     private final int id;
     private final BlockingQueue<Message> handle;
-    private final int[] incomingChannelIDs;
+    private final IncomingChannels incomingChannels;
     private final List<BlockingQueue<Message>> outgoingChannels;
+
     private Color snapColor;
     private Color restoreColor;
-    private final Map<Integer, List<Message>> chan = new HashMap<>();
-    private final Map<Integer, Boolean> closed = new HashMap<>();
     
     private int state;
     private int savedState;
@@ -20,15 +16,13 @@ public class Node implements Runnable {
     public Node(int id, BlockingQueue<Message> handle, int[] incomingChannelIDs, List<BlockingQueue<Message>> outgoingChannels){
         this.id = id;
         this.handle = handle;
-        this.incomingChannelIDs = incomingChannelIDs;
+        this.incomingChannels = new IncomingChannels(incomingChannelIDs);
         this.outgoingChannels = outgoingChannels;
+
         this.snapColor = Color.WHITE;
         this.restoreColor = Color.WHITE;
         this.state = id;
         this.savedState = this.state;
-
-        initializeChan();
-        initializeClosed();
     }
 
     @Override
@@ -50,8 +44,8 @@ public class Node implements Runnable {
                     insertProcessingTime(250);                   // Simulate 
                     this.state += this.id;                       // Update node state by node it
                     sendMsgToNeighbors(forwardMessage);          // Forward ProgMsg to all outgoing neighbors
-                    if (snapColor == Color.RED && closed.get(chanId) == false) {
-                        chan.get(chanId).add(receivedMsg);       // Save any "white" program messages when snapshot is in progress
+                    if (snapColor == Color.RED && incomingChannels.isClosed(chanId) == false) {
+                        incomingChannels.storeTransitMessage(receivedMsg);    // Save any "white" program messages when snapshot is in progress
                     }
                 }
             } 
@@ -59,27 +53,25 @@ public class Node implements Runnable {
                 if (snapColor == Color.WHITE && restoreColor == Color.WHITE) { // No snapshot or restore is in progress. Begin snapshot.
                     savedState = state;                          // Save state
                     snapColor = Color.RED;                       // Red means a snapshot is in progress
-                    initializeChan();                            // Initialize chan collection
-                    initializeClosed();                          // Initialize closed collection
+                    incomingChannels.initializeChan();           // Initialize chan collection
+                    incomingChannels.initializeClosed();         // Initialize closed collection
                     sendMsgToNeighbors(forwardMessage);          // Forward Marker to all outgoing neighbors
                 }
-                closed.put(chanId, true);                        // Upon receive "Marker" from a channel, close that channel
-                boolean allClosed = !closed.containsValue(false);
-                if (allClosed == true){                          // When received "Marker" from all incoming channels,
+                incomingChannels.close(chanId);                  // Upon receive "Marker" from a channel, close that channel
+                if (incomingChannels.allClosed()){               // When received "Marker" from all incoming channels,
                     snapColor = Color.WHITE;                     // Snapshot is done.  Can reset the snapColor to WHITE
                 }
             }
             else if (command == "RESTORE") {
                 if (restoreColor == Color.WHITE && snapColor == Color.WHITE) { // No restore or snapshot is in progress. Begin a restore.
                     restoreColor = Color.RED;                     // Red means restore is in progress
-                    initializeClosed();                           // Initialize restoreClosed collection
+                    incomingChannels.initializeClosed();          // Initialize restoreClosed collection
                     sendMsgToNeighbors(forwardMessage);           // Forward Restore to all outgoing neighbors
                 }
-                closed.put(chanId, true);                         // Upon receive "Restore" from a channel, close that channel      
-                boolean allClosed = !closed.containsValue(false);    
-                if (allClosed == true) {                          // When received "Restore" from all incoming channels, it is safe to restore
+                incomingChannels.close(chanId);                   // Upon receive "Restore" from a channel, close that channel         
+                if (incomingChannels.allClosed()){                // When received "Restore" from all incoming channels, it is safe to restore
                     state = savedState;                           // Restore state
-                    restoreTransitMessages();                     // Restore state messages
+                    incomingChannels.restoreTransitMessages(handle);    // Restore state messages
                     restoreColor = Color.WHITE;                   // Restore is done.  Can reset the restoreColor to WHITE
                 }
             } 
@@ -92,36 +84,12 @@ public class Node implements Runnable {
         eventLogger.close();
     }
 
-    public void initializeChan() {
-        for (int chanId : incomingChannelIDs) {
-            chan.put(chanId, new ArrayList<>());
-        }
-    }
-
-    public void initializeClosed() {
-        for (int chanId : incomingChannelIDs) {
-            closed.put(chanId, false);
-        }
-    }
-
     public void sendMsgToNeighbors(Message message) {
         for (BlockingQueue<Message> handle : this.outgoingChannels){         // forward message to all outgoing channels
             try {
                 handle.put(message);
             } catch (InterruptedException err) {
                 System.out.println("Node" + String.valueOf(this.id) + ": sendMsgToNeighbors: " + err.toString());
-            }
-        }
-    }
-
-    public void restoreTransitMessages(){
-        for (Map.Entry<Integer, List<Message>> entry : chan.entrySet()) {
-            for (Message message : entry.getValue()) {
-                try {
-                    handle.put(message);
-                } catch (InterruptedException err) {
-                    System.out.println("Node" + String.valueOf(this.id) + ": restoreTransitMessages: " + err.toString());
-                }
             }
         }
     }
