@@ -56,7 +56,7 @@ public class Node implements Runnable {
                 }
             } 
             else if (command == "Marker") {
-                if (snapColor == Color.WHITE) {                                 // turn red
+                if (snapColor == Color.WHITE) {                             // turn red
                     savedState = state;
                     snapColor = Color.RED;     
                     sendMsgToNeighbors(new Message(id, "Marker"));          // forward Marker but with new id and state
@@ -64,7 +64,7 @@ public class Node implements Runnable {
                 closed.put(chanId, true);
             }
             else if (command == "Restore") {
-                if (restoreColor == Color.BLUE) {                                   // turn white
+                if (restoreColor == Color.BLUE) {                           // turn green
                     state = savedState;
                     restoreColor = Color.GREEN;    
                     sendMsgToNeighbors(new Message(id, "Restore"));         // forward Restore but with new id and state
