@@ -46,7 +46,7 @@ public class Node implements Runnable {
             int chanId = receivedMsg.id;
             Message forwardMessage = new Message(this.id, command);
             if (command == "ProgMsg") {
-                if(restoreColor == Color.WHITE){
+                if(restoreColor == Color.WHITE){                 // If the node is restoring, it should stop responding to prog messages
                     insertProcessingTime(250);                   // Simulate 
                     this.state += this.id;                       // Update node state by node it
                     sendMsgToNeighbors(forwardMessage);          // Forward ProgMsg to all outgoing neighbors
@@ -56,7 +56,7 @@ public class Node implements Runnable {
                 }
             } 
             else if (command == "MARKER") {
-                if (snapColor == Color.WHITE) {                  // No snapshot is in progress.  Start a new one.
+                if (snapColor == Color.WHITE && restoreColor == Color.WHITE) { // No snapshot or restore is in progress. Begin snapshot.
                     savedState = state;                          // Save state
                     snapColor = Color.RED;                       // Red means a snapshot is in progress
                     initializeChan();                            // Initialize chan collection
@@ -70,7 +70,7 @@ public class Node implements Runnable {
                 }
             }
             else if (command == "RESTORE") {
-                if (restoreColor == Color.WHITE && snapColor == Color.WHITE) {  // No restore or snapshot is in progress. Begin a restore.
+                if (restoreColor == Color.WHITE && snapColor == Color.WHITE) { // No restore or snapshot is in progress. Begin a restore.
                     restoreColor = Color.RED;                     // Red means restore is in progress
                     initializeClosed();                           // Initialize restoreClosed collection
                     sendMsgToNeighbors(forwardMessage);           // Forward Restore to all outgoing neighbors
