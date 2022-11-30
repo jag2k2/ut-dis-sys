@@ -74,14 +74,14 @@ public class Node implements Runnable {
             else if (command == "RESTORE") {
                 if (restoreColor == Color.WHITE && snapColor == Color.WHITE) {  // No restore or snapshot is in progress.
                     restoreColor = Color.RED;                     // Red means restore is in progress
-                    setAllRestoreClosed();
+                    initializeRestoreClosed();
                     sendMsgToNeighbors(forwardMessage);           // Forward Restore to neighbors
                 }
-                restoreClosed.put(chanId, false);                        
-                boolean allOpen = !restoreClosed.containsValue(true);    // Only restore transit messages when all channels are open again.
+                restoreClosed.put(chanId, true);                        
+                boolean allOpen = !restoreClosed.containsValue(false);    // Only restore transit messages when all channels are closed.
                 if (allOpen == true) {
                     state = savedState;                           // Restore state.
-                    restoreTransitMessages();
+                    restoreTransitMessages();                     // Restore state messages
                     restoreColor = Color.WHITE;
                 }
             } 
@@ -110,12 +110,6 @@ public class Node implements Runnable {
         for (int chanId : incomingChannelIDs) {
             restoreClosed.put(chanId, false);
         }   
-    }
-
-    public void setAllRestoreClosed() {
-        for (int chanId : incomingChannelIDs) {
-            restoreClosed.put(chanId, true);
-        }
     }
 
     public void sendMsgToNeighbors(Message message) {
