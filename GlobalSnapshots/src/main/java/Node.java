@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class Node implements Runnable, SnapShotAPI {
     private final int id;
@@ -39,8 +40,8 @@ public class Node implements Runnable, SnapShotAPI {
     @Override
     public void run() {
         try {
-            String filename = "debug_out" + String.valueOf(id) + ".txt";
-            FileWriter fileWriter = new FileWriter(filename);
+            String DebugFilename = "debug_out" + String.valueOf(id) + ".txt";
+            FileWriter fileWriter = new FileWriter(DebugFilename);
             while (true) {
                     Message receivedMsg = handle.take();
                     String command = receivedMsg.command;
@@ -49,10 +50,10 @@ public class Node implements Runnable, SnapShotAPI {
                     }
                     receive(receivedMsg);
                     if (command == "AppMsg") {
+                        fileWriter.write("\n" + state + "\n");
                         state = receivedMsg.payload + 1;
                         Thread.sleep(100);
                         fileWriter.write("Process" + String.valueOf(id) + ": AppMsg from chan" + String.valueOf(receivedMsg.id) + ", state: " + String.valueOf(state) + "\n");
-                        fileWriter.flush();
                         Message responseMessage = new Message(id, "AppMsg", state, null);
                         outgoingChannels.get(0).put(responseMessage);
                     } 
@@ -61,14 +62,49 @@ public class Node implements Runnable, SnapShotAPI {
                     }
                     else if (command == "Restore") {
                         System.out.println("About to Restore");
-                        restoreState();
+                        //put the restore message in the outgoing queue before restoring the state else it will loop
+                        //it will loop in the Restore "state" message
+
+
+                        //freeze the entire system first;
+
+                        //then restore state
+                        File snapshot = new File(filename);
+                        if(snapshot.exists()) {
+
+                            restoreState();
+                            Message travelingRestore = new Message(id, "Restore", 0, null);
+                            outgoingChannels.get(0).put(travelingRestore);
+                            String cmd = "";
+                            int tries = 0;
+                            while( !cmd.equals("Restore") ){
+                                Message recv = handle.poll();
+                                if(recv == null){continue;}
+                                cmd = recv.command;
+                                //drop message that weren't previously saved.
+                                //but once we receive back our Restore message from node4->node1 then
+                                //not only have we cleared our handle we can gurantee that restore can now occur.
+                            }
+                            if(snapshot.delete()) {
+                                restoreMessages();
+                                fileWriter.write("ITS WORKING!!!");
+                                fileWriter.write("Restored to State, Node: " + this.id + " State: " + this.state);
+                                Message delete_msg = new Message(id, "Restore", 0, null);
+                                outgoingChannels.get(0).put(delete_msg);
+                                //Get The Program Started Again.
+                                Message responseMessage = new Message(id, "AppMsg", state, null);
+                                outgoingChannels.get(0).put(responseMessage);
+
+                            }
+                        }
 
                     } 
                     else if (command == "Exit") {
                         outgoingChannels.get(0).put(new Message(id, "Exit", 0, null));
-                        this.fileWriter.close();
+                        fileWriter.close();
                         break;
                     }
+                    fileWriter.flush();
             } 
             //fileWriter.close();
         } catch (Exception err) {
@@ -137,11 +173,6 @@ public class Node implements Runnable, SnapShotAPI {
         //During this IO operation there could have been messages queued so save the chan object
         //which are the incoming messages during that time.
 
-//        FileOutputStream fout = new FileOutputStream("Node_" + this.id + "_messageList.txt");
-//        ObjectOutputStream objStream = new ObjectOutputStream(fout);
-//        objStream.writeObject(this.chan);
-//        fout.close();
-//        System.out.println("SnapShot of Node: " + this.id + ", State: " + this.state);
     }
 
     public int getState(){
@@ -152,54 +183,50 @@ public class Node implements Runnable, SnapShotAPI {
         turnRed();
     }
 
-    public void restoreState() throws InterruptedException, IOException {
+    public void restoreState() throws IOException {
         Scanner fileToRead = new Scanner(new File(filename));
-        if(myMarkerColor == MarkerCustom.RED) {
-            state = fileToRead.nextInt();
-            // READ during time of snapshot the restoration of the channel
-            ObjectInputStream objectinputstream = null;
-            try {
-                FileInputStream streamIn = new FileInputStream("Node_" + this.id + "_messageList.txt");
-                objectinputstream = new ObjectInputStream(streamIn);
-                Map<Integer, List<Message>> chanObjectStreamedIn = (Map<Integer, List<Message>>) objectinputstream.readObject();
-                System.out.println(chanObjectStreamedIn);
-                this.chan = chanObjectStreamedIn;
-                System.out.println("updated the channel successfully of previous messages");
-
-                this.handle.clear();
-
-                for( Map.Entry<Integer, List<Message>> oldMesgList : chan.entrySet()){
-                    for(Message msg: oldMesgList.getValue() ){
-                        handle.put(msg); // Loses Fifo change to List of Messages
-                        // loses any Happens-Before relationship that might exist between these messages
-                    }
-                }
-
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                if(objectinputstream != null){
-                    objectinputstream.close();
-                }
-            }
-
-
-            myMarkerColor = MarkerCustom.WHITE;
-            Message markerMessage = new Message(this.id, "Restore",0, null);
-
-
-            outgoingChannels.get(0).put(markerMessage);
-            System.out.println("Restored to State, Node: " + this.id + " State: " + this.state);
-
-            //now restore the incoming messages that occured previously
-        }
-        else{
-            if(fileToRead.hasNextInt()){
+        if(myMarkerColor != null) {
+            if(myMarkerColor == MarkerCustom.RED) {
                 state = fileToRead.nextInt();
-                myMarkerColor = MarkerCustom.WHITE; // just make sure the marker color is set to White.
+
             }
+
+            else if(myMarkerColor == MarkerCustom.RED) {
+                myMarkerColor = MarkerCustom.WHITE;
+            }
+            System.out.println(myMarkerColor);
         }
-    }
+   }
+
+   public void restoreMessages() throws IOException {
+       // READ during time of snapshot the restoration of the channel
+       ObjectInputStream objectinputstream = null;
+       try {
+           FileInputStream streamIn = new FileInputStream("Node_" + this.id + "_messageList.txt");
+           objectinputstream = new ObjectInputStream(streamIn);
+           Map<Integer, List<Message>> chanObjectStreamedIn = (Map<Integer, List<Message>>) objectinputstream.readObject();
+           System.out.println(chanObjectStreamedIn);
+           this.chan = chanObjectStreamedIn;
+           System.out.println("updated the channel successfully of previous messages");
+
+           this.handle.clear();
+
+           for (Map.Entry<Integer, List<Message>> oldMesgList : chan.entrySet()) {
+               for (Message msg : oldMesgList.getValue()) {
+                   System.out.println("message is: " + msg.command + " " + msg.id + " " + msg.payload);
+
+                   this.handle.put(msg); // Loses Fifo change to List of Messages
+               }
+           }
+
+
+       } catch (Exception e) {
+           e.printStackTrace();
+       } finally {
+           if (objectinputstream != null) {
+               objectinputstream.close();
+           }
+       }
+   }
 
 }
