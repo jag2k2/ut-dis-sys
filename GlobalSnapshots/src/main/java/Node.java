@@ -9,7 +9,8 @@ public class Node implements Runnable {
     private final BlockingQueue<Message> handle;
     private final int[] incomingChannelIDs;
     private final List<BlockingQueue<Message>> outgoingChannels;
-    private Color color;
+    private Color snapColor;
+    private Color restoreColor;
     private final Map<Integer, List<Message>> chan = new HashMap<>();
     private final Map<Integer, Boolean> closed = new HashMap<>();
 
@@ -21,8 +22,8 @@ public class Node implements Runnable {
         this.handle = handle;
         this.incomingChannelIDs = incomingChannelIDs;
         this.outgoingChannels = outgoingChannels;
-        this.color = Color.WHITE;
-
+        this.snapColor = Color.WHITE;
+        this.restoreColor = Color.BLUE;
         this.state = 0;
 
         initializeChan();
@@ -50,22 +51,22 @@ public class Node implements Runnable {
                 }
                 this.state += this.id;                     
                 sendMsgToNeighbors(new Message(id, command));
-                if (color == Color.RED && closed.get(chanId) == false) {
+                if (snapColor == Color.RED && closed.get(chanId) == false) {
                     chan.get(chanId).add(receivedMsg);
                 }
             } 
             else if (command == "Marker") {
-                if (color == Color.WHITE) {                                 // turn red
+                if (snapColor == Color.WHITE) {                                 // turn red
                     savedState = state;
-                    this.color = Color.RED;     
+                    snapColor = Color.RED;     
                     sendMsgToNeighbors(new Message(id, "Marker"));          // forward Marker but with new id and state
                 }
                 closed.put(chanId, true);
             }
             else if (command == "Restore") {
-                if (color == Color.RED) {                                   // turn white
+                if (restoreColor == Color.BLUE) {                                   // turn white
                     state = savedState;
-                    this.color = Color.WHITE;    
+                    restoreColor = Color.GREEN;    
                     sendMsgToNeighbors(new Message(id, "Restore"));         // forward Restore but with new id and state
                 }
                 closed.put(chanId, false);
