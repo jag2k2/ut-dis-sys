@@ -42,7 +42,7 @@ public class Node implements Runnable {
             if (command == "ProgMsg") {
                 if(restoreColor == Color.WHITE){                 // If the node is restoring, it should stop responding to prog messages
                     insertProcessingTime(250);                   // Simulate 
-                    this.state += this.id;                       // Update node state by node it
+                    this.state += this.id;                       // Update node state by node id
                     sendMsgToNeighbors(forwardMessage);          // Forward ProgMsg to all outgoing neighbors
                     if (snapColor == Color.RED && incomingChannels.isClosed(chanId) == false) {
                         incomingChannels.storeTransitMessage(receivedMsg);    // Save any "white" program messages when snapshot is in progress
