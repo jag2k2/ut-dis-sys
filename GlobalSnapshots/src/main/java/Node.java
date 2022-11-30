@@ -24,57 +24,76 @@ public class Node implements Runnable {
         this.color = Color.WHITE;
 
         this.state = 0;
-        for (int chanId : incomingChannelIDs) {
-            closed.put(chanId, false);
-            chan.put(chanId, new ArrayList<>());
-        }
+
+        initializeChan();
+        initializeClosed();
     }
 
     @Override
     public void run() {
-        try {
-            EventLogger eventLogger = new EventLogger(id);
-            boolean exit = false;
-            do {
-                Message receivedMsg = handle.take();
-                String command = receivedMsg.command;
-                if (command == "ProgMsg") {
-                    Thread.sleep(100);
-                    this.state += this.id;                     
-                    sendMsgToNeighbors(new Message(id, command));
-                } 
-                else if (command == "Marker") {
-                    if (color == Color.WHITE) {
-                        turnRed();
-                    }
+        EventLogger eventLogger = new EventLogger(this.id);
+        boolean exit = false;
+        do {
+            Message receivedMsg = new Message(this.id, "default");
+            try {
+                receivedMsg = handle.take();
+            } catch (Exception err) {
+                System.out.println("Node" + String.valueOf(this.id) + " queue take: " + err.toString());
+            }
+            String command = receivedMsg.command;
+            int chanId = receivedMsg.id;
+            if (command == "ProgMsg") {
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException err) {
+                    System.out.println("Node" + String.valueOf(this.id) + " sleep");
                 }
-                else if (command == "Restore") {
-                    if (color == Color.RED) {
-                        turnWhite();
-                    }
-                } 
-                else if (command == "Exit") {
-                    sendMsgToNeighbors(new Message(id, command));
-                    exit = true;
+                this.state += this.id;                     
+                sendMsgToNeighbors(new Message(id, command));
+                if (color == Color.RED && closed.get(chanId) == false) {
+                    chan.get(chanId).add(receivedMsg);
                 }
-                eventLogger.logMessage(receivedMsg, state);
-            } while (exit == false);
-            eventLogger.close();
-        } catch (Exception err) {
-            System.out.println(err.toString());
+            } 
+            else if (command == "Marker") {
+                if (color == Color.WHITE) {                                 // turn red
+                    savedState = state;
+                    this.color = Color.RED;     
+                    sendMsgToNeighbors(new Message(id, "Marker"));          // forward Marker but with new id and state
+                }
+                closed.put(chanId, true);
+            }
+            else if (command == "Restore") {
+                if (color == Color.RED) {                                   // turn white
+                    state = savedState;
+                    this.color = Color.WHITE;    
+                    sendMsgToNeighbors(new Message(id, "Restore"));         // forward Restore but with new id and state
+                }
+                closed.put(chanId, false);
+                boolean allOpen = !chan.containsValue(true);
+                if (allOpen == true) {
+                    restoreTransitMessages();
+                    initializeChan();
+                }
+            } 
+            else if (command == "Exit") {
+                sendMsgToNeighbors(new Message(id, command));
+                exit = true;
+            }
+            eventLogger.logMessage(receivedMsg, state);
+        } while (exit == false);
+        eventLogger.close();
+    }
+
+    public void initializeChan() {
+        for (int chanId : incomingChannelIDs) {
+            chan.put(chanId, new ArrayList<>());
         }
     }
 
-    public void turnRed() {
-        //savedState = state;
-        this.color = Color.RED;     
-        sendMsgToNeighbors(new Message(id, "Marker"));           // forward Marker but with new id and state
-    }
-
-    public void turnWhite() {
-        //state = savedState;
-        this.color = Color.WHITE;    
-        sendMsgToNeighbors(new Message(id, "Restore"));           // forward Restore but with new id and state
+    public void initializeClosed() {
+        for (int chanId : incomingChannelIDs) {
+            closed.put(chanId, false);
+        }
     }
 
     public void sendMsgToNeighbors(Message message) {
@@ -82,7 +101,19 @@ public class Node implements Runnable {
             try {
                 handle.put(message);
             } catch (InterruptedException err) {
-                System.out.println(err.toString());
+                System.out.println("Node" + String.valueOf(this.id) + ": sendMsgToNeighbors: " + err.toString());
+            }
+        }
+    }
+
+    public void restoreTransitMessages(){
+        for (Map.Entry<Integer, List<Message>> entry : chan.entrySet()) {
+            for (Message message : entry.getValue()) {
+                try {
+                    handle.put(message);
+                } catch (InterruptedException err) {
+                    System.out.println("Node" + String.valueOf(this.id) + ": restoreTransitMessages: " + err.toString());
+                }
             }
         }
     }
