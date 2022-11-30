@@ -25,9 +25,6 @@ public class Node implements Runnable {
         this.snapColor = Color.WHITE;
         this.restoreColor = Color.BLUE;
         this.state = 0;
-
-        initializeChan();
-        initializeClosed();
     }
 
     @Override
@@ -56,9 +53,15 @@ public class Node implements Runnable {
                 if (snapColor == Color.WHITE) {                             // turn red
                     savedState = state;
                     snapColor = Color.RED;     
+                    initializeChan();
+                    initializeClosed();
                     sendMsgToNeighbors(forwardMessage);          // forward Marker but with new id and state
                 }
                 closed.put(chanId, true);
+                boolean allClosed = !closed.containsValue(false);
+                if (allClosed == true){
+                    snapColor = Color.WHITE;
+                }
             }
             else if (command == "RESTORE") {
                 if (restoreColor == Color.BLUE) {                           // turn green
@@ -70,7 +73,6 @@ public class Node implements Runnable {
                     boolean allOpen = !closed.containsValue(true);
                     if (allOpen == true) {
                         restoreTransitMessages();
-                        initializeChan();
                 }
             } 
             else if (command == "Exit") {
