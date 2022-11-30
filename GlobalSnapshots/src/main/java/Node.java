@@ -23,8 +23,9 @@ public class Node implements Runnable {
         this.incomingChannelIDs = incomingChannelIDs;
         this.outgoingChannels = outgoingChannels;
         this.snapColor = Color.WHITE;
-        this.restoreColor = Color.BLUE;
-        this.state = 0;
+        this.restoreColor = Color.WHITE;
+        this.state = id;
+        this.savedState = this.state;
     }
 
     @Override
@@ -42,6 +43,7 @@ public class Node implements Runnable {
             int chanId = receivedMsg.id;
             Message forwardMessage = new Message(this.id, command);
             if (command == "ProgMsg") {
+                System.out.println("Node" + String.valueOf(this.id) + ": ProgMsg! " + String.valueOf(this.state));
                 insertProcessingTime(250);
                 this.state += this.id;                     
                 sendMsgToNeighbors(forwardMessage);
@@ -50,12 +52,12 @@ public class Node implements Runnable {
                 }
             } 
             else if (command == "MARKER") {
-                if (snapColor == Color.WHITE) {                             // turn red
-                    savedState = state;
-                    snapColor = Color.RED;     
+                if (snapColor == Color.WHITE) {                  // No snapshot is in progress.  Start a new one
+                    savedState = state;                          // Save state
+                    snapColor = Color.RED;                       // Red means a snapshot is in progress
                     initializeChan();
-                    initializeClosed();
-                    sendMsgToNeighbors(forwardMessage);          // forward Marker but with new id and state
+                    setAllChannelsOpen();
+                    sendMsgToNeighbors(forwardMessage);          // Forward Marker to neighbors
                 }
                 closed.put(chanId, true);
                 boolean allClosed = !closed.containsValue(false);
@@ -64,15 +66,19 @@ public class Node implements Runnable {
                 }
             }
             else if (command == "RESTORE") {
-                if (restoreColor == Color.BLUE) {                           // turn green
-                        state = savedState;
-                    restoreColor = Color.GREEN;    
-                    sendMsgToNeighbors(forwardMessage);         // forward Restore but with new id and state
-                    }
-                    closed.put(chanId, false);
-                    boolean allOpen = !closed.containsValue(true);
-                    if (allOpen == true) {
-                        restoreTransitMessages();
+                if (restoreColor == Color.WHITE && snapColor == Color.WHITE) {  // No restore or snapshot is in progress.
+                    handle.clear();
+                    System.out.println("Node" + String.valueOf(this.id) + ": Clearing Queue! " + String.valueOf(handle.size()));
+                    state = savedState;                           // Restore state.
+                    restoreColor = Color.RED;                     // Red means restore is in progress
+                    setAllChannelsClosed();
+                    sendMsgToNeighbors(forwardMessage);           // Forward Restore to neighbors
+                }
+                closed.put(chanId, false);                        
+                boolean allOpen = !closed.containsValue(true);    // Only restore transit messages when all channels are open again.
+                if (allOpen == true) {
+                    restoreTransitMessages();
+                    restoreColor = Color.WHITE;
                 }
             } 
             else if (command == "Exit") {
@@ -90,9 +96,15 @@ public class Node implements Runnable {
         }
     }
 
-    public void initializeClosed() {
+    public void setAllChannelsOpen() {
         for (int chanId : incomingChannelIDs) {
             closed.put(chanId, false);
+        }
+    }
+
+    public void setAllChannelsClosed() {
+        for (int chanId : incomingChannelIDs) {
+            closed.put(chanId, true);
         }
     }
 
@@ -109,11 +121,12 @@ public class Node implements Runnable {
     public void restoreTransitMessages(){
         for (Map.Entry<Integer, List<Message>> entry : chan.entrySet()) {
             for (Message message : entry.getValue()) {
-                try {
-                    handle.put(message);
-                } catch (InterruptedException err) {
-                    System.out.println("Node" + String.valueOf(this.id) + ": restoreTransitMessages: " + err.toString());
-                }
+                // try {
+                //     System.out.println("Node" + String.valueOf(this.id) + ": Restoring message!");
+                //     handle.put(message);
+                // } catch (InterruptedException err) {
+                //     System.out.println("Node" + String.valueOf(this.id) + ": restoreTransitMessages: " + err.toString());
+                // }
             }
         }
     }
