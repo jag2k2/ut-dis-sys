@@ -1,4 +1,0 @@
-Process1: AppMsg from chan0, state: 1
-Process1: AppMsg from chan4, state: 5
-Process1: AppMsg from chan4, state: 9
-Process1: AppMsg from chan4, state: 13
