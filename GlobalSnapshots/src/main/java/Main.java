@@ -24,7 +24,7 @@ public class Main {
         outgoingChannels3.add(handleNode4);
         outgoingChannels4.add(handleNode1);
 
-        int[] incomingChannelIDs1 = {4};
+        int[] incomingChannelIDs1 = {0,4};
         int[] incomingChannelIDs2 = {1};
         int[] incomingChannelIDs3 = {2};
         int[] incomingChannelIDs4 = {3};
@@ -43,21 +43,28 @@ public class Main {
         System.out.println("Enter a Command (0:Exit/1:Snapshot/2:Restore)");
 
         try {
-            handleNode1.put(new Message(0, "AppMsg", 0));
-            while (true) {
+            handleNode1.put(new Message(0, "ProgMsg"));
+            boolean exit = false;
+            do {
                 try {
                     int cmd = inputReader.nextInt();
                     if (cmd == 0) {
-                        handleNode1.put(new Message(0, "Exit", 0));
-                        break;
+                        handleNode1.put(new Message(0, "Exit"));
+                        exit = true;
+                    }
+                    else if (cmd == 1) {
+                        handleNode1.put(new Message(0, "MARKER"));
+                    }
+                    else if (cmd == 2) {
+                        handleNode1.put(new Message(0, "RESTORE"));
                     }
                     else {
-                        System.out.println("User Input: " + Integer.valueOf(cmd));
+                        System.out.println("Invalid input: " + Integer.valueOf(cmd));
                     }
                 } catch (InputMismatchException err) {
                     System.out.println(err.toString());
                 }
-            }
+            } while (exit == false);
 
             nodeThread1.join();
             nodeThread2.join();
